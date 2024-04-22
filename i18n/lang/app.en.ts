@@ -1,32 +1,27 @@
 const translation = {
   common: {
-    welcome: 'Welcome to use',
-    appUnavailable: 'App is unavailable',
-    appUnkonwError: 'App is unavailable',
+    welcome: 'Vitajte',
+    appUnavailable: 'Aplikácia je nedostupná',
+    appUnkonwError: 'Aplikácia je nedostupná',
   },
   chat: {
-    newChat: 'New chat',
-    newChatDefaultName: 'New conversation',
-    openingStatementTitle: 'Opening statement',
+    newChat: 'Nová konverzácia',
+    newChatDefaultName: 'Nová konverzácia',
+    openingStatementTitle: 'Úvodné vyhlásenie',
     powerBy: 'Powered by',
-    prompt: 'Prompt',
-    privatePromptConfigTitle: 'Conversation settings',
-    publicPromptConfigTitle: 'Initial Prompt',
-    configStatusDes: 'Before start, you can modify conversation settings',
-    configDisabled:
-      'Previous session settings have been used for this session.',
-    startChat: 'Start Chat',
-    privacyPolicyLeft:
-      'Please read the ',
-    privacyPolicyMiddle:
-      'privacy policy',
-    privacyPolicyRight:
-      ' provided by the app developer.',
+    prompt: 'Výzva',
+    privatePromptConfigTitle: 'Nastavenia konverzácie',
+    publicPromptConfigTitle: 'Počiatočná výzva',
+    configStatusDes: 'Pred začatím môžete upraviť nastavenia konverzácie',
+    configDisabled: 'Pre túto reláciu boli použité predchádzajúce nastavenia relácie.',
+    startChat: 'Začať',
+    privacyPolicyLeft: 'Prečítajte si prosím ',
+    privacyPolicyMiddle: 'zásady ochrany osobných údajov',
+    privacyPolicyRight: ' poskytnuté vývojárom aplikácie.',
   },
   errorMessage: {
-    valueOfVarRequired: 'Variables value can not be empty',
-    waitForResponse:
-      'Please wait for the response to the previous message to complete.',
+    valueOfVarRequired: 'Hodnota premennej nemôže byť prázdna',
+    waitForResponse: 'Počkajte prosím na dokončenie odpovede na predchádzajúcu správu.',
   },
 }
 

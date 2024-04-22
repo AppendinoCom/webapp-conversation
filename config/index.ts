@@ -4,10 +4,10 @@ export const API_KEY = `${process.env.NEXT_PUBLIC_APP_KEY}`
 export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
 export const APP_INFO: AppInfo = {
   title: 'MGA Demo Chat App',
-  description: '',
-  copyright: '',
+  description: 'Testovacia verzia Chatbot Mesta BA Demo',
+  copyright: 'Appendino.com',
   privacy_policy: '',
-  default_language: 'zh-Hans',
+  default_language: 'en',
 }
 
 export const isShowPrompt = false
