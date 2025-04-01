@@ -1,8 +1,8 @@
 const translation = {
   common: {
     welcome: '', //vitajte
-    appUnavailable: 'Aplikácia je nedostupná',
-    appUnkonwError: 'Aplikácia je nedostupná',
+    appUnavailable: 'Aplikácia je nedostupná. Nedostupná',
+    appUnkonwError: 'Aplikácia je nedostupná. Neznáma chyba',
   },
   chat: {
     newChat: 'Nová konverzácia',
