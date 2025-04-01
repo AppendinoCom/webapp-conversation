@@ -11,8 +11,8 @@ import Sidebar from '@/app/components/sidebar'
 import ConfigSence from '@/app/components/config-scence'
 import Header from '@/app/components/header'
 import { fetchAppParams, fetchChatList, fetchConversations, generationConversationName, sendChatMessage, updateFeedback } from '@/service'
-import type { ConversationItem, Feedbacktype, IChatItem, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
-import { Resolution, TransferMethod } from '@/types/app'
+import type { ChatItem, ConversationItem, Feedbacktype, PromptConfig, VisionFile, VisionSettings } from '@/types/app'
+import { Resolution, TransferMethod, WorkflowRunningStatus } from '@/types/app'
 import Chat from '@/app/components/chat'
 import { setLocaleOnClient } from '@/i18n/client'
 import useBreakpoints, { MediaType } from '@/hooks/use-breakpoints'
@@ -23,7 +23,11 @@ import { API_KEY, APP_ID, APP_INFO, isShowPrompt, promptTemplate } from '@/confi
 import type { Annotation as AnnotationType } from '@/types/log'
 import { addFileInfos, sortAgentSorts } from '@/utils/tools'
 
-const Main: FC = () => {
+export type IMainProps = {
+  params: any
+}
+
+const Main: FC<IMainProps> = () => {
   const { t } = useTranslation()
   const media = useBreakpoints()
   const isMobile = media === MediaType.mobile
@@ -33,7 +37,7 @@ const Main: FC = () => {
   * app info
   */
   const [appUnavailable, setAppUnavailable] = useState<boolean>(false)
-  const [isUnknwonReason, setIsUnknwonReason] = useState<boolean>(false)
+  const [isUnknownReason, setIsUnknownReason] = useState<boolean>(false)
   const [promptConfig, setPromptConfig] = useState<PromptConfig | null>(null)
   const [inited, setInited] = useState<boolean>(false)
   // in mobile, show sidebar by click button
@@ -86,7 +90,7 @@ const Main: FC = () => {
     setCurrInputs(inputs)
     setChatStarted()
     // parse variables in introduction
-    setChatList(generateNewChatListWithOpenstatement('', inputs))
+    setChatList(generateNewChatListWithOpenStatement('', inputs))
   }
   const hasSetInputs = (() => {
     if (!isNewConversation)
@@ -121,10 +125,10 @@ const Main: FC = () => {
     }
 
     // update chat list of current conversation
-    if (!isNewConversation && !conversationIdChangeBecauseOfNew && !isResponsing) {
+    if (!isNewConversation && !conversationIdChangeBecauseOfNew && !isResponding) {
       fetchChatList(currConversationId).then((res: any) => {
         const { data } = res
-        const newChatList: IChatItem[] = generateNewChatListWithOpenstatement(notSyncToStateIntroduction, notSyncToStateInputs)
+        const newChatList: ChatItem[] = generateNewChatListWithOpenStatement(notSyncToStateIntroduction, notSyncToStateInputs)
 
         data.forEach((item: any) => {
           newChatList.push({
@@ -148,7 +152,7 @@ const Main: FC = () => {
     }
 
     if (isNewConversation && isChatStarted)
-      setChatList(generateNewChatListWithOpenstatement())
+      setChatList(generateNewChatListWithOpenStatement())
   }
   useEffect(handleConversationSwitch, [currConversationId, inited])
 
@@ -168,7 +172,7 @@ const Main: FC = () => {
   /*
   * chat info. chat is under conversation.
   */
-  const [chatList, setChatList, getChatList] = useGetState<IChatItem[]>([])
+  const [chatList, setChatList, getChatList] = useGetState<ChatItem[]>([])
   const chatListDomRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     // scroll to bottom
@@ -176,7 +180,7 @@ const Main: FC = () => {
       chatListDomRef.current.scrollTop = chatListDomRef.current.scrollHeight
   }, [chatList, currConversationId])
   // user can not edit inputs if user had send message
-  const canEditInpus = !chatList.some(item => item.isAnswer === false) && isNewConversation
+  const canEditInputs = !chatList.some(item => item.isAnswer === false) && isNewConversation
   const createNewChat = () => {
     // if new chat is already exist, do not create new chat
     if (conversationList.some(item => item.id === '-1'))
@@ -193,21 +197,21 @@ const Main: FC = () => {
   }
 
   // sometime introduction is not applied to state
-  const generateNewChatListWithOpenstatement = (introduction?: string, inputs?: Record<string, any> | null) => {
-    let caculatedIntroduction = introduction || conversationIntroduction || ''
-    const caculatedPromptVariables = inputs || currInputs || null
-    if (caculatedIntroduction && caculatedPromptVariables)
-      caculatedIntroduction = replaceVarWithValues(caculatedIntroduction, promptConfig?.prompt_variables || [], caculatedPromptVariables)
+  const generateNewChatListWithOpenStatement = (introduction?: string, inputs?: Record<string, any> | null) => {
+    let calculatedIntroduction = introduction || conversationIntroduction || ''
+    const calculatedPromptVariables = inputs || currInputs || null
+    if (calculatedIntroduction && calculatedPromptVariables)
+      calculatedIntroduction = replaceVarWithValues(calculatedIntroduction, promptConfig?.prompt_variables || [], calculatedPromptVariables)
 
-    const openstatement = {
+    const openStatement = {
       id: `${Date.now()}`,
-      content: caculatedIntroduction,
+      content: calculatedIntroduction,
       isAnswer: true,
       feedbackDisabled: true,
       isOpeningStatement: isShowPrompt,
     }
-    if (caculatedIntroduction)
-      return [openstatement]
+    if (calculatedIntroduction)
+      return [openStatement]
 
     return []
   }
@@ -223,7 +227,12 @@ const Main: FC = () => {
         const [conversationData, appParams] = await Promise.all([fetchConversations(), fetchAppParams()])
 
         // handle current conversation id
-        const { data: conversations } = conversationData as { data: ConversationItem[] }
+        const { data: conversations, error } = conversationData as { data: ConversationItem[]; error: string }
+        if (error) {
+          Toast.notify({ type: 'error', message: error })
+          throw new Error(error)
+          return
+        }
         const _conversationId = getConversationIdFromStorage(APP_ID)
         const isNotNewConversation = conversations.some(item => item.id === _conversationId)
 
@@ -255,14 +264,14 @@ const Main: FC = () => {
           setAppUnavailable(true)
         }
         else {
-          setIsUnknwonReason(true)
+          setIsUnknownReason(true)
           setAppUnavailable(true)
         }
       }
     })()
   }, [])
 
-  const [isResponsing, { setTrue: setResponsingTrue, setFalse: setResponsingFalse }] = useBoolean(false)
+  const [isResponding, { setTrue: setRespondingTrue, setFalse: setRespondingFalse }] = useBoolean(false)
   const [abortController, setAbortController] = useState<AbortController | null>(null)
   const { notify } = Toast
   const logError = (message: string) => {
@@ -279,8 +288,8 @@ const Main: FC = () => {
     const inputLens = Object.values(currInputs).length
     const promptVariablesLens = promptConfig.prompt_variables.length
 
-    const emytyInput = inputLens < promptVariablesLens || Object.values(currInputs).find(v => !v)
-    if (emytyInput) {
+    const emptyInput = inputLens < promptVariablesLens || Object.values(currInputs).find(v => !v)
+    if (emptyInput) {
       logError(t('app.errorMessage.valueOfVarRequired'))
       return false
     }
@@ -291,7 +300,7 @@ const Main: FC = () => {
   const [openingSuggestedQuestions, setOpeningSuggestedQuestions] = useState<string[]>([])
   const [messageTaskId, setMessageTaskId] = useState('')
   const [hasStopResponded, setHasStopResponded, getHasStopResponded] = useGetState(false)
-  const [isResponsingConIsCurrCon, setIsResponsingConCurrCon, getIsResponsingConIsCurrCon] = useGetState(true)
+  const [isRespondingConIsCurrCon, setIsRespondingConCurrCon, getIsRespondingConIsCurrCon] = useGetState(true)
   const [userQuery, setUserQuery] = useState('')
 
   const updateCurrentQA = ({
@@ -300,10 +309,10 @@ const Main: FC = () => {
     placeholderAnswerId,
     questionItem,
   }: {
-    responseItem: IChatItem
+    responseItem: ChatItem
     questionId: string
     placeholderAnswerId: string
-    questionItem: IChatItem
+    questionItem: ChatItem
   }) => {
     // closesure new list is outdated.
     const newListWithAnswer = produce(
@@ -318,7 +327,7 @@ const Main: FC = () => {
   }
 
   const handleSend = async (message: string, files?: VisionFile[]) => {
-    if (isResponsing) {
+    if (isResponding) {
       notify({ type: 'info', message: t('app.errorMessage.waitForResponse') })
       return
     }
@@ -340,7 +349,7 @@ const Main: FC = () => {
       })
     }
 
-    // qustion
+    // question
     const questionId = `question-${Date.now()}`
     const questionItem = {
       id: questionId,
@@ -362,7 +371,7 @@ const Main: FC = () => {
     let isAgentMode = false
 
     // answer
-    const responseItem: IChatItem = {
+    const responseItem: ChatItem = {
       id: `${Date.now()}`,
       content: '',
       agent_thoughts: [],
@@ -374,7 +383,7 @@ const Main: FC = () => {
     const prevTempNewConversationId = getCurrConversationId() || '-1'
     let tempNewConversationId = ''
 
-    setResponsingTrue()
+    setRespondingTrue()
     sendChatMessage(data, {
       getAbortController: (abortController) => {
         setAbortController(abortController)
@@ -399,7 +408,7 @@ const Main: FC = () => {
         setMessageTaskId(taskId)
         // has switched to other conversation
         if (prevTempNewConversationId !== getCurrConversationId()) {
-          setIsResponsingConCurrCon(false)
+          setIsRespondingConCurrCon(false)
           return
         }
         updateCurrentQA({
@@ -426,7 +435,7 @@ const Main: FC = () => {
         resetNewConversationInputs()
         setChatNotStarted()
         setCurrConversationId(tempNewConversationId, APP_ID, true)
-        setResponsingFalse()
+        setRespondingFalse()
       },
       onFile(file) {
         const lastThought = responseItem.agent_thoughts?.[responseItem.agent_thoughts?.length - 1]
@@ -465,7 +474,7 @@ const Main: FC = () => {
         }
         // has switched to other conversation
         if (prevTempNewConversationId !== getCurrConversationId()) {
-          setIsResponsingConCurrCon(false)
+          setIsRespondingConCurrCon(false)
           return false
         }
 
@@ -520,10 +529,56 @@ const Main: FC = () => {
         ))
       },
       onError() {
-        setResponsingFalse()
+        setRespondingFalse()
         // role back placeholder answer
         setChatList(produce(getChatList(), (draft) => {
           draft.splice(draft.findIndex(item => item.id === placeholderAnswerId), 1)
+        }))
+      },
+      onWorkflowStarted: ({ workflow_run_id, task_id }) => {
+        // taskIdRef.current = task_id
+        responseItem.workflow_run_id = workflow_run_id
+        responseItem.workflowProcess = {
+          status: WorkflowRunningStatus.Running,
+          tracing: [],
+        }
+        setChatList(produce(getChatList(), (draft) => {
+          const currentIndex = draft.findIndex(item => item.id === responseItem.id)
+          draft[currentIndex] = {
+            ...draft[currentIndex],
+            ...responseItem,
+          }
+        }))
+      },
+      onWorkflowFinished: ({ data }) => {
+        responseItem.workflowProcess!.status = data.status as WorkflowRunningStatus
+        setChatList(produce(getChatList(), (draft) => {
+          const currentIndex = draft.findIndex(item => item.id === responseItem.id)
+          draft[currentIndex] = {
+            ...draft[currentIndex],
+            ...responseItem,
+          }
+        }))
+      },
+      onNodeStarted: ({ data }) => {
+        responseItem.workflowProcess!.tracing!.push(data as any)
+        setChatList(produce(getChatList(), (draft) => {
+          const currentIndex = draft.findIndex(item => item.id === responseItem.id)
+          draft[currentIndex] = {
+            ...draft[currentIndex],
+            ...responseItem,
+          }
+        }))
+      },
+      onNodeFinished: ({ data }) => {
+        const currentIndex = responseItem.workflowProcess!.tracing!.findIndex(item => item.node_id === data.node_id)
+        responseItem.workflowProcess!.tracing[currentIndex] = data as any
+        setChatList(produce(getChatList(), (draft) => {
+          const currentIndex = draft.findIndex(item => item.id === responseItem.id)
+          draft[currentIndex] = {
+            ...draft[currentIndex],
+            ...responseItem,
+          }
         }))
       },
     })
@@ -558,7 +613,7 @@ const Main: FC = () => {
   }
 
   if (appUnavailable)
-    return <AppUnavailable isUnknwonReason={isUnknwonReason} errMessage={!hasSetAppConfig ? 'Please set APP_ID and API_KEY in config/index.tsx' : ''} />
+    return <AppUnavailable isUnknownReason={isUnknownReason} errMessage={!hasSetAppConfig ? 'Please set APP_ID and API_KEY in config/index.tsx' : ''} />
 
   if (!APP_ID || !APP_INFO || !promptConfig)
     return <Loading type='app' />
@@ -593,7 +648,7 @@ const Main: FC = () => {
             siteInfo={APP_INFO}
             promptConfig={promptConfig}
             onStartChat={handleStartChat}
-            canEidtInpus={canEditInpus}
+            canEditInputs={canEditInputs}
             savedInputs={currInputs as Record<string, any>}
             onInputsChange={setCurrInputs}
           ></ConfigSence>
@@ -606,7 +661,7 @@ const Main: FC = () => {
                     chatList={chatList}
                     onSend={handleSend}
                     onFeedback={handleFeedback}
-                    isResponsing={isResponsing}
+                    isResponding={isResponding}
                     checkCanSend={checkCanSend}
                     visionConfig={visionConfig}
                   />

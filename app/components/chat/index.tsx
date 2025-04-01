@@ -7,8 +7,8 @@ import Textarea from 'rc-textarea'
 import s from './style.module.css'
 import Answer from './answer'
 import Question from './question'
-import type { FeedbackFunc, Feedbacktype } from './type'
-import type { VisionFile, VisionSettings } from '@/types/app'
+import type { FeedbackFunc } from './type'
+import type { ChatItem, VisionFile, VisionSettings } from '@/types/app'
 import { TransferMethod } from '@/types/app'
 import Tooltip from '@/app/components/base/tooltip'
 import Toast from '@/app/components/base/toast'
@@ -17,7 +17,7 @@ import ImageList from '@/app/components/base/image-uploader/image-list'
 import { useImageFiles } from '@/app/components/base/image-uploader/hooks'
 
 export type IChatProps = {
-  chatList: IChatItem[]
+  chatList: ChatItem[]
   /**
    * Whether to display the editing area and rating status
    */
@@ -30,30 +30,9 @@ export type IChatProps = {
   checkCanSend?: () => boolean
   onSend?: (message: string, files: VisionFile[]) => void
   useCurrentUserAvatar?: boolean
-  isResponsing?: boolean
+  isResponding?: boolean
   controlClearQuery?: number
   visionConfig?: VisionSettings
-}
-
-export type IChatItem = {
-  id: string
-  content: string
-  /**
-   * Specific message type
-   */
-  isAnswer: boolean
-  /**
-   * The user feedback result of this message
-   */
-  feedback?: Feedbacktype
-  /**
-   * Whether to hide the feedback area
-   */
-  feedbackDisabled?: boolean
-  isIntroduction?: boolean
-  useCurrentUserAvatar?: boolean
-  isOpeningStatement?: boolean
-  message_files?: VisionFile[]
 }
 
 const Chat: FC<IChatProps> = ({
@@ -64,7 +43,7 @@ const Chat: FC<IChatProps> = ({
   checkCanSend,
   onSend = () => { },
   useCurrentUserAvatar,
-  isResponsing,
+  isResponding,
   controlClearQuery,
   visionConfig,
 }) => {
@@ -116,7 +95,7 @@ const Chat: FC<IChatProps> = ({
     if (!files.find(item => item.type === TransferMethod.local_file && !item.fileId)) {
       if (files.length)
         onClear()
-      if (!isResponsing)
+      if (!isResponding)
         setQuery('')
     }
   }
@@ -150,7 +129,7 @@ const Chat: FC<IChatProps> = ({
               item={item}
               feedbackDisabled={feedbackDisabled}
               onFeedback={onFeedback}
-              isResponsing={isResponsing && isLast}
+              isResponding={isResponding && isLast}
             />
           }
           return (

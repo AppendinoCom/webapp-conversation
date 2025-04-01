@@ -23,6 +23,9 @@ const translation = {
     valueOfVarRequired: 'Hodnota premennej nemôže byť prázdna',
     waitForResponse: 'Počkajte prosím na dokončenie odpovede na predchádzajúcu správu.',
   },
+  variableTable: {
+    optional: 'Optional',
+  },
 }
 
 export default translation
