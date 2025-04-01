@@ -5,7 +5,7 @@ export const API_URL = `${process.env.NEXT_PUBLIC_API_URL}`
 export const APP_INFO: AppInfo = {
   title: 'Demo Chat App',
   description: 'Testovacia verzia Chatbot',
-  copyright: 'Appendino.com',
+  copyright: 'TechCloud.sk',
   privacy_policy: '',
   default_language: 'en',
 }

@@ -340,8 +340,8 @@ const Welcome: FC<IWelcomeProps> = ({
               </div>
               : <div>
               </div>}
-            <a className='flex items-center pr-3 space-x-3' href="https://appendino.com/" target="_blank">
-              <span className='uppercase'>{t('app.chat.powerBy')} Appendino.com</span>
+            <a className='flex items-center pr-3 space-x-3' href="https://TechCloud.sk/" target="_blank">
+              <span className='uppercase'>{t('app.chat.powerBy')} TechCloud.sk</span>
 
             </a>
           </div>
